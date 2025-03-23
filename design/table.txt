@@ -1,0 +1,168 @@
+根据业务需求，建议创建以下数据库表结构保证系统运行。以下是按功能模块划分的建表清单及关键字段说明：
+
+数据库设计方案（共11张核心表）
+1. 用户管理模块
+1.1 用户表 (user)
+CREATE TABLE user (
+    id VARCHAR(255) PRIMARY KEY COMMENT '用户ID',
+    username VARCHAR(50) UNIQUE NOT NULL COMMENT '登录账号',
+    encrypted_password VARCHAR(100) NOT NULL COMMENT '加密密码',
+    phone VARCHAR(20) COMMENT '联系电话',
+    company_name VARCHAR(100) COMMENT '所属单位名称',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+);
+
+1.2 用户地址表 (user_address)
+CREATE TABLE user_address (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL COMMENT '关联用户ID',
+    tag VARCHAR(20) COMMENT '地址标签（如：公司仓库）',
+    contact_name VARCHAR(50) NOT NULL COMMENT '收货人姓名',
+    phone CHAR(11) NOT NULL COMMENT '收货电话',
+    full_address VARCHAR(200) NOT NULL COMMENT '完整地址',
+    geo_point POINT NOT NULL SRID 4326 COMMENT '地理坐标',
+    is_default BOOLEAN DEFAULT FALSE COMMENT '是否默认地址',
+    KEY idx_user (user_id),
+    SPATIAL INDEX idx_geo (geo_point)
+);
+
+
+2. 商品模块
+2.1 商品主表 (product_info) [已存在，做字段优化]
+ALTER TABLE product_info
+    MODIFY specification VARCHAR(100) COMMENT '规格（增加单位信息）',
+    ADD COLUMN price DECIMAL(10,2) COMMENT '指导价',
+    ADD COLUMN product_type ENUM('管件','管材','线槽') COMMENT '建材分类';
+
+2.2 商品图片表 (product_image)
+CREATE TABLE product_image (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    product_code VARCHAR(255) NOT NULL COMMENT '商品编码',
+    image_url VARCHAR(500) NOT NULL COMMENT '图片地址', 
+    is_main BOOLEAN DEFAULT FALSE COMMENT '是否主图',
+    KEY idx_product (product_code)
+);
+
+
+3. 经销商模块
+3.1 经销商表 (dealer)
+CREATE TABLE dealer (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL COMMENT '经销商名称',
+    service_area GEOMETRY NOT NULL SRID 4326 COMMENT '服务区域（地理多边形）', 
+    contact_phone VARCHAR(20) NOT NULL COMMENT '服务热线',
+    address TEXT COMMENT '实体地址',
+    rating DECIMAL(2,1) DEFAULT 5.0 COMMENT '综合评分',
+    SPATIAL INDEX idx_area (service_area)
+);
+
+3.2 经销商库存表 (dealer_stock) [*未涉及库存时仍需要基础关联]
+CREATE TABLE dealer_stock (
+    dealer_id BIGINT NOT NULL,
+    product_code VARCHAR(255) NOT NULL,  -- 关联product_info.code
+    is_available BOOLEAN DEFAULT TRUE COMMENT '是否可接单',
+    PRIMARY KEY (dealer_id, product_code)
+);
+
+
+4. 订单交易模块
+4.1 购物车表 (cart)
+CREATE TABLE cart (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL COMMENT '关联用户',
+    product_code VARCHAR(255) NOT NULL COMMENT '商品编码',
+    quantity INT UNSIGNED DEFAULT 1 COMMENT '购买数量',
+    selected_attrs JSON COMMENT '选中属性（颜色/长度等）', 
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_user (user_id)
+);
+
+4.2 订单主表 (order)
+CREATE TABLE `order` (
+    order_no VARCHAR(30) PRIMARY KEY COMMENT '订单号（规则：DATE+SEQ）',
+    user_id VARCHAR(255) NOT NULL COMMENT '用户ID', 
+    dealer_id BIGINT NOT NULL COMMENT '经销商ID',
+    total_amount DECIMAL(12,2) NOT NULL COMMENT '总金额',
+    address_id BIGINT NOT NULL COMMENT '配送地址',
+    status ENUM('pending','confirmed','delivered','completed') DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_user (user_id),
+    KEY idx_dealer (dealer_id)
+);
+
+4.3 订单明细表 (order_item)
+CREATE TABLE order_item (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_no VARCHAR(30) NOT NULL COMMENT '订单号',
+    product_code VARCHAR(255) NOT NULL COMMENT '商品编码', 
+    quantity INT UNSIGNED NOT NULL,
+    unit_price DECIMAL(10,2) NOT NULL COMMENT '成交单价',
+    selected_color VARCHAR(50) COMMENT '用户选择的颜色',
+    selected_length VARCHAR(50) COMMENT '选择的长度',
+    KEY idx_order (order_no)
+);
+
+
+5. 会话与日志模块
+5.1 会话状态表 (session_state)
+CREATE TABLE session_state (
+    session_id VARCHAR(40) PRIMARY KEY COMMENT '会话ID（UUID）',
+    user_id VARCHAR(255) COMMENT '可能未登录',
+    current_intent VARCHAR(50) COMMENT '当前意图（如：参数选择）',
+    missing_params JSON COMMENT '缺失的参数列表',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expiry_time DATETIME NOT NULL COMMENT '会话有效期'
+);
+
+
+6. 评价系统模块
+6.1 评价表 (review)
+CREATE TABLE review (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_no VARCHAR(30) NOT NULL,
+    product_code VARCHAR(255) NOT NULL,
+    dealer_id BIGINT NOT NULL,
+    rating TINYINT CHECK (rating BETWEEN 1 AND 5) COMMENT '总体评分',
+    comment TEXT COMMENT '文字评价',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_product (product_code),
+    KEY idx_dealer (dealer_id) 
+);
+
+
+表关系示意图
+erDiagram
+    USER ||--o{ USER_ADDRESS : has
+    USER ||--o{ CART : "操作"
+    USER ||--o{ ORDER : "创建"
+    
+    PRODUCT_INFO ||--o{ PRODUCT_IMAGE : "包含图片"
+    PRODUCT_INFO ||--o{ CART : "在购物车"
+    PRODUCT_INFO ||--o{ ORDER_ITEM : "订单明细"
+    
+    DEALER ||--o{ DEALER_STOCK : "库存关联"
+    DEALER ||--o{ ORDER : "服务"
+    
+    ORDER ||--o{ ORDER_ITEM : "包含商品"
+    ORDER ||--o{ REVIEW : "产生评价"
+    
+    SESSION_STATE }|--|| USER : "可能关联"
+
+
+核心索引设计建议
+
+地理索引 (user_address.geo_point, dealer.service_area)
+
+需要MySQL 8+支持地理空间索引直接通过ST_Within函数快速匹配经销商
+复合索引 (order(user_id, created_at))
+
+优化用户订单列表查询
+全文索引 (product_info.name)
+
+支持建材商品模糊搜索的性能优化
+覆盖索引 (cart(user_id, product_code))
+
+快速判定是否已添加过同类商品
+
+
+该设计方案覆盖从用户交互到订单履行的全业务流程，满足高并发下建材行业复杂的参数匹配需求，同时通过合理索引确保查询性能。
