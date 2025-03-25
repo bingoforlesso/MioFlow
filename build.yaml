@@ -1,0 +1,21 @@
+targets:
+  $default:
+    builders:
+      freezed:
+        generate_for:
+          include:
+            - lib/features/*/domain/bloc/*.dart
+            - lib/features/*/domain/models/*.dart
+            - lib/features/*/domain/entities/*.dart
+            - lib/features/*/presentation/bloc/*.dart
+            - lib/features/*/presentation/models/*.dart
+            - lib/features/*/presentation/entities/*.dart
+      json_serializable:
+        options:
+          explicit_to_json: true
+        generate_for:
+          include:
+            - lib/features/*/domain/models/*.dart
+            - lib/features/*/domain/entities/*.dart
+            - lib/features/*/presentation/models/*.dart
+            - lib/features/*/presentation/entities/*.dart 

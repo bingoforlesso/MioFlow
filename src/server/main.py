@@ -8,7 +8,7 @@ app = FastAPI(title="MioDing API")
 # 配置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # 允许的前端域名
+    allow_origins=["http://localhost:8000", "http://localhost:3000"],  # 允许的前端域名
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
