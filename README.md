@@ -11,8 +11,71 @@
 - 多语言支持（中文/英文）
 - 状态管理使用 BLoC 模式
 - 依赖注入实现
+- 智能搜索匹配功能
 
 ## 主要功能说明
+
+### 智能搜索功能
+产品搜索功能提供了多种智能匹配方式，大大提升了搜索的灵活性和准确性：
+
+1. **同音字匹配**
+   - 自动识别并匹配同音汉字，如搜索"连塑"能匹配到"联塑"品牌产品
+   - 基于优化的文本规范化算法，优先处理同音字映射
+   - 支持常见多音字智能匹配
+
+2. **拼音匹配**
+   - 支持使用拼音进行搜索，如"shuiguan"可匹配到"水管"
+   - 结合中文分词技术，提高拼音匹配准确度
+   - 支持不完整拼音和拼音首字母搜索
+
+3. **分词匹配**
+   - 智能分析复合查询词，如"不锈钢水管"会被分解为多个关键词进行匹配
+   - 自动识别产品类别、材质、品牌等关键信息
+   - 根据分词权重进行智能排序
+
+4. **数字单位匹配**
+   - 支持中英文单位互换，如"1.5寸"可匹配"1.5inch"相关产品
+   - 自动转换常见计量单位（如厘米、米、英寸等）
+   - 支持小数点和分数形式的数值匹配
+
+5. **品牌匹配**
+   - 智能识别品牌名称，如"ppr管"能识别为PPR材质的管道产品
+   - 品牌别名和缩写支持
+   - 自动纠正常见品牌名称拼写错误
+
+搜索匹配功能通过优化的normalize_text函数实现，该函数按照以下顺序处理文本：
+- 首先处理同音字映射
+- 转换为小写以便不区分大小写匹配
+- 处理别名和缩写映射
+- 处理单位换算和标准化
+
+### 产品筛选功能
+产品列表页面提供了强大的筛选功能，可以根据以下属性进行筛选：
+
+- 规格（Specification）
+- 度数（Degree）
+- 材质（Material）
+- 品牌（Brand）
+- 型号（Model）
+- 产品类型（Product Type）
+- 名称（Name）
+- 颜色（Color）
+- 长度（Length）
+- 压力（Pressure）
+- 重量（Weight）
+- 输出品牌（Output Brand）
+- 功率（Wattage）
+- 使用类型（Usage Type）
+- 子类型（Sub Type）
+
+筛选面板位于产品列表的左侧，用户可以：
+1. 展开/折叠各个筛选组
+2. 选择/取消选择筛选选项
+3. 查看每个选项的产品数量
+4. 一键清除所有筛选条件
+
+筛选结果会实时更新，显示符合所有选中条件的产品。
+
 1. 用户认证
    - 用户注册
    - 用户登录
@@ -33,6 +96,8 @@
 - GetIt 依赖注入
 - Flutter Localizations 国际化
 - Material 3 设计系统
+- Python FastAPI 后端
+- MySQL 9.2.0 数据库
 
 ## 依赖版本说明
 1. 核心依赖
@@ -240,6 +305,44 @@
      get_it: ^7.2.0       # 依赖注入
      flutter_dotenv: ^5.1.0  # 环境变量
      ```
+
+4. 数据库表使用问题
+   - 问题现象：代码中错误使用 `products` 表而不是 `product_info` 表
+   - 问题原因：
+     * 未仔细阅读数据库设计文档
+     * 使用了默认的表名假设
+     * 缺乏与后端的沟通确认
+   - 正确做法：
+     * 使用 `product_info` 表作为商品信息主表
+     * 表结构包含更丰富的字段：
+       - 基本信息：id, code, name, brand
+       - 规格参数：specification, material, color, length
+       - 性能参数：pressure, degree, wattage
+       - 分类信息：product_type, usage_type, sub_type
+     * 在代码中明确注释表的用途和关系
+   - 改进措施：
+     * 添加数据库表映射文档
+     * 在代码中统一使用正确的表名
+     * 添加表名常量定义
+     * 定期同步数据库设计变更
+
+5. 搜索功能问题解决
+   - 问题现象：搜索同音字产品时无法返回正确结果
+   - 问题原因：
+     * `normalize_text`函数处理顺序不正确
+     * 同音字映射未优先处理
+     * 文本转换为小写过早，影响了同音字处理
+   - 解决方案：
+     * 重新调整了文本处理顺序，优先处理同音字映射
+     * 将处理同音字的逻辑移到函数开头
+     * 确保在所有映射处理后才进行其他文本转换
+     * 添加更多详细的同音字映射对
+   - 优化效果：
+     * 同音字搜索：如"连塑"成功匹配到"联塑"品牌产品
+     * 拼音搜索：如"shuiguan"成功匹配到"水管"相关产品
+     * 分词匹配：如"不锈钢水管"成功匹配到相关产品
+     * 数字单位匹配：如"1.5寸"成功匹配到"1.5inch"相关规格产品
+     * 品牌匹配：如"ppr管"成功识别PPR材质管道产品
 
 ## 使用说明
 1. 环境配置
@@ -508,3 +611,141 @@
       flutter pub get
       flutter run
       ```
+
+## 搜索结果筛选功能实现
+
+### 第一阶段：基础筛选功能
+
+#### 功能亮点
+1. 智能筛选面板
+   - 左侧固定宽度(280dp)的筛选面板，采用 Material Design 3 设计规范
+   - 支持 15 种核心产品属性的精确筛选
+   - 实时显示每个筛选选项对应的产品数量
+   - 支持筛选条件的展开/折叠管理
+   - 一键清除所有筛选条件
+
+2. 用户友好的交互设计
+   - 筛选选项支持多选操作
+   - 已选条件在顶部横向滚动展示
+   - 每个筛选条件支持单独删除
+   - 空结果时提供智能建议
+   - 支持通过点击产品卡片上的属性标签快速筛选
+
+3. 高性能实现
+   - 使用 ListView.builder 实现长列表的高效渲染
+   - 筛选操作采用防抖处理，优化性能
+   - 预计算筛选选项数量，避免重复计算
+   - 采用 BLoC 模式管理状态，确保响应性能
+
+4. 数据结构设计
+   ```dart
+   // 筛选选项定义
+   class FilterOption {
+     final String attribute;    // 属性名称
+     final String value;        // 选项值
+     final int count;          // 符合该选项的产品数量
+     final bool selected;      // 是否被选中
+   }
+
+   // 筛选组定义
+   class FilterGroup {
+     final String attribute;    // 属性名称
+     final String displayName;  // 显示名称
+     final List<FilterOption> options;  // 选项列表
+     final bool isExpanded;    // 是否展开
+   }
+
+   // 筛选状态定义
+   class FilterState {
+     final Map<String, Set<String>> selectedFilters;  // 已选筛选条件
+     final List<FilterGroup> filterGroups;            // 所有筛选组
+   }
+   ```
+
+5. 核心筛选属性
+   - 规格（Specification）
+   - 度数（Degree）
+   - 材质（Material）
+   - 品牌（Brand）
+   - 型号（Model）
+   - 产品类型（Product Type）
+   - 名称（Name）
+   - 颜色（Color）
+   - 长度（Length）
+   - 压力（Pressure）
+   - 重量（Weight）
+   - 输出品牌（Output Brand）
+   - 功率（Wattage）
+   - 使用类型（Usage Type）
+   - 子类型（Sub Type）
+
+6. 性能优化策略
+   - 采用懒加载方式显示筛选选项
+   - 使用缓存优化筛选结果
+   - 实现筛选条件的本地存储
+   - 优化筛选算法复杂度
+   - 减少不必要的重建
+
+7. 用户体验优化
+   - 提供清晰的视觉反馈
+   - 支持键盘快捷操作
+   - 适配不同屏幕尺寸
+   - 实现平滑的动画效果
+   - 提供友好的错误提示
+
+8. 技术实现亮点
+   - 使用 BLoC 模式实现状态管理
+   - 采用 Repository 模式处理数据
+   - 实现依赖注入优化代码结构
+   - 使用 Freezed 生成不可变对象
+   - 支持单元测试和集成测试
+
+9. 开发步骤
+   ```bash
+   # 1. 创建筛选相关的数据模型
+   lib/features/product/domain/models/filter_option.dart
+   lib/features/product/domain/models/filter_group.dart
+   lib/features/product/domain/models/filter_state.dart
+
+   # 2. 创建筛选服务
+   lib/features/product/domain/services/filter_service.dart
+
+   # 3. 创建筛选相关的 UI 组件
+   lib/features/product/presentation/widgets/filter_panel.dart
+   lib/features/product/presentation/widgets/filter_group.dart
+   lib/features/product/presentation/widgets/selected_filters.dart
+   lib/features/product/presentation/widgets/filter_option_item.dart
+
+   # 4. 创建筛选状态管理
+   lib/features/product/presentation/bloc/filter_bloc.dart
+   lib/features/product/presentation/bloc/filter_event.dart
+   lib/features/product/presentation/bloc/filter_state.dart
+   ```
+
+10. 测试用例
+    ```dart
+    void main() {
+      group('Filter Service Tests', () {
+        test('应该正确过滤单个属性', () {
+          // 测试代码
+        });
+
+        test('应该支持多属性组合筛选', () {
+          // 测试代码
+        });
+
+        test('应该正确计算筛选选项数量', () {
+          // 测试代码
+        });
+      });
+    }
+    ```
+
+11. 注意事项
+    - 确保筛选逻辑的性能优化
+    - 处理空结果的用户体验
+    - 保持筛选状态的一致性
+    - 支持筛选条件的持久化
+    - 考虑移动端的触摸友好性
+
+## Cursor 历史下载链接
