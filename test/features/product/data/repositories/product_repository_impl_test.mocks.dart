@@ -7,7 +7,8 @@ import 'dart:async' as _i4;
 
 import 'package:mio_ding/features/product/data/datasources/product_remote_data_source.dart'
     as _i3;
-import 'package:mio_ding/features/product/domain/entities/product.dart' as _i2;
+import 'package:mio_ding/features/product/data/models/product_model.dart'
+    as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -23,8 +24,8 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
-class _FakeProduct_0 extends _i1.SmartFake implements _i2.Product {
-  _FakeProduct_0(
+class _FakeProductModel_0 extends _i1.SmartFake implements _i2.ProductModel {
+  _FakeProductModel_0(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -43,36 +44,48 @@ class MockProductRemoteDataSource extends _i1.Mock
   }
 
   @override
-  _i4.Future<List<_i2.Product>> searchProducts(String? query) =>
+  _i4.Future<List<_i2.ProductModel>> getProducts() => (super.noSuchMethod(
+        Invocation.method(
+          #getProducts,
+          [],
+        ),
+        returnValue:
+            _i4.Future<List<_i2.ProductModel>>.value(<_i2.ProductModel>[]),
+      ) as _i4.Future<List<_i2.ProductModel>>);
+
+  @override
+  _i4.Future<_i2.ProductModel> getProductDetails(String? productId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getProductDetails,
+          [productId],
+        ),
+        returnValue: _i4.Future<_i2.ProductModel>.value(_FakeProductModel_0(
+          this,
+          Invocation.method(
+            #getProductDetails,
+            [productId],
+          ),
+        )),
+      ) as _i4.Future<_i2.ProductModel>);
+
+  @override
+  _i4.Future<List<_i2.ProductModel>> searchProducts({
+    required String? query,
+    int? page = 1,
+    int? pageSize = 20,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #searchProducts,
-          [query],
-        ),
-        returnValue: _i4.Future<List<_i2.Product>>.value(<_i2.Product>[]),
-      ) as _i4.Future<List<_i2.Product>>);
-
-  @override
-  _i4.Future<_i2.Product> getProductById(String? id) => (super.noSuchMethod(
-        Invocation.method(
-          #getProductById,
-          [id],
-        ),
-        returnValue: _i4.Future<_i2.Product>.value(_FakeProduct_0(
-          this,
-          Invocation.method(
-            #getProductById,
-            [id],
-          ),
-        )),
-      ) as _i4.Future<_i2.Product>);
-
-  @override
-  _i4.Future<List<_i2.Product>> getAllProducts() => (super.noSuchMethod(
-        Invocation.method(
-          #getAllProducts,
           [],
+          {
+            #query: query,
+            #page: page,
+            #pageSize: pageSize,
+          },
         ),
-        returnValue: _i4.Future<List<_i2.Product>>.value(<_i2.Product>[]),
-      ) as _i4.Future<List<_i2.Product>>);
+        returnValue:
+            _i4.Future<List<_i2.ProductModel>>.value(<_i2.ProductModel>[]),
+      ) as _i4.Future<List<_i2.ProductModel>>);
 }

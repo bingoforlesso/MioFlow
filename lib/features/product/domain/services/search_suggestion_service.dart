@@ -13,7 +13,11 @@ class SearchSuggestionService {
       return [];
     }
 
-    final products = await _productRepository.searchProducts(query);
+    final products = await _productRepository.searchProducts(
+      query: query,
+      page: 1,
+      pageSize: 20,
+    );
     return _extractSuggestions(products, query);
   }
 

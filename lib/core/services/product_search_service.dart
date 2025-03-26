@@ -14,44 +14,47 @@ class ProductSearchService {
 
   Future<List<Map<String, dynamic>>> searchProductsByParameters(
       Map<String, dynamic> parameters) async {
-    // TODO: Implement actual product search logic
-    // This is a mock implementation
-    return [
-      {
-        'id': '1759509602627493893',
-        'name': '联塑 PVC-U给水管',
-        'specification': 'dn110',
-        'pressure': '0.6MPa',
-        'colors': ['白色', '黑色'],
-        'lengths': ['6M'],
-        'price': 158.00,
-        'stock': 100,
+    try {
+      final response = await _dio.post('/products/search', data: parameters);
+      if (response.data is Map<String, dynamic>) {
+        final data = response.data as Map<String, dynamic>;
+        if (data['success'] == true && data['data'] is List) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        }
       }
-    ];
+      return [];
+    } catch (e) {
+      print('搜索产品时出错: $e');
+      return [];
+    }
   }
 
   Future<List<Product>> searchProducts(String query) async {
     try {
-      // 调用仓库的搜索方法
-      return await _productRepository.searchProducts(query);
+      return await _productRepository.searchProducts(
+        query: query,
+        page: 1,
+        pageSize: 20,
+      );
     } catch (e) {
-      // 记录错误，并返回空列表
       print('搜索产品时出错: $e');
       return [];
     }
   }
 
   Future<Map<String, dynamic>?> getProductById(String id) async {
-    // TODO: Implement actual product retrieval logic
-    return {
-      'id': id,
-      'name': '联塑 PVC-U给水管',
-      'specification': 'dn110',
-      'pressure': '0.6MPa',
-      'color': '黑色',
-      'length': '6M',
-      'price': 158.00,
-      'stock': 100,
-    };
+    try {
+      final response = await _dio.get('/products/$id');
+      if (response.data is Map<String, dynamic>) {
+        final data = response.data as Map<String, dynamic>;
+        if (data['success'] == true && data['data'] != null) {
+          return data['data'] as Map<String, dynamic>;
+        }
+      }
+      return null;
+    } catch (e) {
+      print('获取产品详情时出错: $e');
+      return null;
+    }
   }
 }

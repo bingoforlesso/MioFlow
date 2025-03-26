@@ -1,8 +1,11 @@
 import '../entities/product.dart';
 
 abstract class ProductRepository {
-  Future<List<Product>> getAllProducts();
-  Future<List<Product>> searchProducts(String query);
-  Future<Product> getProductById(String id);
-  Future<List<Product>> filterProducts(Map<String, List<String>> filters);
+  Future<List<Product>> getProducts();
+  Future<Product?> getProductDetails(String productId);
+  Future<List<Product>> searchProducts({
+    required String query,
+    int page = 1,
+    int pageSize = 20,
+  });
 }

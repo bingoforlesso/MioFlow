@@ -1,48 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 
-const Product = sequelize.define('Product', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-  },
-  code: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-  },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  description: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-  },
-  image: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  price: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-  },
-  stock: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    defaultValue: 0,
-  },
-  attributes: {
-    type: DataTypes.JSON,
-    allowNull: true,
-  },
-}, {
-  timestamps: true,
-  underscored: true,
-});
-
-// 定义 ProductInfo 模型，映射到 product_info 表
 const ProductInfo = sequelize.define('ProductInfo', {
   id: {
     type: DataTypes.STRING,
@@ -126,8 +84,7 @@ const ProductInfo = sequelize.define('ProductInfo', {
   },
 }, {
   tableName: 'product_info',
-  timestamps: false, // 假设表中没有时间戳列
+  timestamps: false,
 });
 
-export { ProductInfo };
-export default Product; 
+export { ProductInfo }; 

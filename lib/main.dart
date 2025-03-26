@@ -12,6 +12,7 @@ import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/cart/presentation/bloc/cart_bloc.dart';
 import 'features/chat/presentation/bloc/chat_bloc.dart';
 import 'features/product/domain/bloc/product_bloc.dart';
+import 'features/product/presentation/bloc/product_list_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +59,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider.value(
           value: getIt<ProductBloc>(),
+        ),
+        BlocProvider.value(
+          value: getIt<ProductListBloc>(),
         ),
       ],
       child: MaterialApp.router(

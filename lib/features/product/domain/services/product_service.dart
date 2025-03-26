@@ -46,7 +46,7 @@ class ProductService {
   Future<List<Product>> searchProducts(String query) async {
     try {
       debugPrint('正在搜索商品...');
-      final response = await _dio.post('/api/v1/product_info/search',
+      final response = await _dio.post('/api/v1/products/search',
           data: {'query': query, 'params': []});
       debugPrint('搜索商品响应: ${response.data}');
 

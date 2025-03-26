@@ -54,11 +54,11 @@ class ProductItem extends StatelessWidget {
               if (product.color != null) ...[
                 Text('颜色: ${product.color}'),
               ],
-              if (product.product_type != null) ...[
-                Text('类型: ${product.product_type}'),
+              if (product.productType != null) ...[
+                Text('类型: ${product.productType}'),
               ],
-              if (product.usage_type != null) ...[
-                Text('用途: ${product.usage_type}'),
+              if (product.usageType != null) ...[
+                Text('用途: ${product.usageType}'),
               ],
               // 规格信息
               if (product.length != null ||

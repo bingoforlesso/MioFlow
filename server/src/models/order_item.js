@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 import Order from './order.js';
-import Product from './product.js';
+import { ProductInfo } from './product.js';
 
 const OrderItem = sequelize.define('OrderItem', {
   id: {
@@ -18,10 +18,10 @@ const OrderItem = sequelize.define('OrderItem', {
     }
   },
   productId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING,
     allowNull: false,
     references: {
-      model: Product,
+      model: ProductInfo,
       key: 'id'
     }
   },
@@ -46,6 +46,6 @@ const OrderItem = sequelize.define('OrderItem', {
 // 设置关联关系
 Order.hasMany(OrderItem);
 OrderItem.belongsTo(Order);
-OrderItem.belongsTo(Product);
+OrderItem.belongsTo(ProductInfo);
 
 export default OrderItem; 

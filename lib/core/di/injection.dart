@@ -2,10 +2,14 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import '../services/api_service.dart';
+import '../database/database.dart';
+import '../../features/product/data/datasources/product_remote_data_source.dart';
+import '../../features/product/data/repositories/product_repository_impl.dart';
 import '../../features/product/domain/repositories/product_repository.dart';
 import '../../features/product/domain/services/product_matcher_service.dart';
 import '../../features/product/domain/services/product_service.dart';
 import '../../features/product/domain/bloc/product_bloc.dart';
+import '../../features/product/presentation/bloc/product_list_bloc.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/cart/presentation/bloc/cart_bloc.dart';
@@ -19,5 +23,14 @@ import 'injection.config.dart';
 
 final getIt = GetIt.instance;
 
-@InjectableInit()
+@InjectableInit(
+  initializerName: 'init',
+  preferRelativeImports: true,
+  asExtension: true,
+)
 Future<void> configureDependencies() async => getIt.init();
+
+@module
+abstract class RegisterModule {
+  // Empty module
+}

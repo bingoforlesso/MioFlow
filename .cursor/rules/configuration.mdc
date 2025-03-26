@@ -1,0 +1,36 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+统一使用中文回复
+
+mysql:
+IP地址：127.0.0.1
+端口：3306
+用户名：root
+密码：Ac661978
+数据库：mioflow
+
+python -V
+Python 3.12.5
+
+https://github.com/bingoforlesso/MioFlow.git
+
+代码示例：
+echo "# MioFlow" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/bingoforlesso/MioFlow.git
+git push -u origin main
+
+MioFlow.log
+记录产品日志信息
+
+README.md
+记录项目信息
+
+configuration.xml
+记录项目配置信息

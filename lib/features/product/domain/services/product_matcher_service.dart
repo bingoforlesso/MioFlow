@@ -9,7 +9,11 @@ class ProductMatcherService {
   ProductMatcherService(this._productRepository);
 
   Future<List<Product>> searchProducts(String text) async {
-    return await _productRepository.searchProducts(text);
+    return await _productRepository.searchProducts(
+      query: text,
+      page: 1,
+      pageSize: 20,
+    );
   }
 
   Future<List<Product>> searchProductsByVoice(String voiceText) async {

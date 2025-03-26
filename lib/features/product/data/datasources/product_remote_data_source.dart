@@ -1,118 +1,100 @@
+import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
-import 'package:mio_ding/core/services/api_service.dart';
-import 'package:mio_ding/features/product/domain/entities/product.dart';
+import '../../../../core/error/exceptions.dart';
+import '../../../../core/network/api_client.dart';
+import '../models/product_model.dart';
 
-@injectable
-class ProductRemoteDataSource {
-  final ApiService _apiService;
+abstract class ProductRemoteDataSource {
+  Future<List<ProductModel>> getProducts();
+  Future<ProductModel> getProductDetails(String productId);
+  Future<List<ProductModel>> searchProducts({
+    required String query,
+    int page = 1,
+    int pageSize = 20,
+  });
+}
 
-  ProductRemoteDataSource(this._apiService);
+@Injectable(as: ProductRemoteDataSource)
+class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
+  final ApiClient _apiClient;
 
-  Future<List<Product>> searchProducts(String query) async {
+  ProductRemoteDataSourceImpl(this._apiClient);
+
+  @override
+  Future<List<ProductModel>> getProducts() async {
     try {
-      final response = await _apiService.post('/api/v1/product_info/search',
-          data: {'query': query, 'params': []});
-      if (response.data['success'] == true && response.data['data'] != null) {
-        final List<dynamic> data = response.data['data'] as List;
-        return data.map((json) {
-          final Map<String, dynamic> productJson = json as Map<String, dynamic>;
-          return Product(
-            id: productJson['id'] as String,
-            code: productJson['code'] as String,
-            name: productJson['name'] as String,
-            brand: productJson['brand'] as String,
-            material_code: productJson['material_code'] as String,
-            output_brand: productJson['output_brand'] as String?,
-            product_name: productJson['product_name'] as String?,
-            model: productJson['model'] as String?,
-            specification: productJson['specification'] as String?,
-            color: productJson['color'] as String?,
-            length: productJson['length'] as String?,
-            weight: productJson['weight'] as String?,
-            wattage: productJson['wattage'] as String?,
-            pressure: productJson['pressure'] as String?,
-            degree: productJson['degree'] as String?,
-            material: productJson['material'] as String?,
-            price: productJson['price'] != null
-                ? (productJson['price'] as num).toDouble()
-                : null,
-            product_type: productJson['product_type'] as String?,
-            usage_type: productJson['usage_type'] as String?,
-            sub_type: productJson['sub_type'] as String?,
-          );
-        }).toList();
-      } else {
-        throw Exception('搜索产品失败: 返回数据格式错误');
+      final response = await _apiClient.get<Map<String, dynamic>>('/products');
+      if (response.data?['success'] == true) {
+        final List<dynamic> productsJson = response.data?['data'] ?? [];
+        return productsJson
+            .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))
+            .toList();
       }
-    } catch (e) {
-      throw Exception('搜索产品失败: $e');
-    }
-  }
-
-  Future<Product> getProductById(String id) async {
-    try {
-      final response = await _apiService.get('/api/product_info/$id');
-      final Map<String, dynamic> data = response.data as Map<String, dynamic>;
-      return Product(
-        id: data['id'] as String,
-        code: data['code'] as String,
-        name: data['name'] as String,
-        brand: data['brand'] as String,
-        material_code: data['material_code'] as String,
-        output_brand: data['output_brand'] as String?,
-        product_name: data['product_name'] as String?,
-        model: data['model'] as String?,
-        specification: data['specification'] as String?,
-        color: data['color'] as String?,
-        length: data['length'] as String?,
-        weight: data['weight'] as String?,
-        wattage: data['wattage'] as String?,
-        pressure: data['pressure'] as String?,
-        degree: data['degree'] as String?,
-        material: data['material'] as String?,
-        price: data['price'] != null ? (data['price'] as num).toDouble() : null,
-        product_type: data['product_type'] as String?,
-        usage_type: data['usage_type'] as String?,
-        sub_type: data['sub_type'] as String?,
+      throw ServerException(
+        message: response.data?['message'] ?? '获取产品列表失败',
       );
     } catch (e) {
-      throw Exception('获取产品详情失败: $e');
+      throw ServerException(
+        message: e is DioException ? e.message ?? '网络错误' : e.toString(),
+      );
     }
   }
 
-  Future<List<Product>> getAllProducts() async {
+  @override
+  Future<ProductModel> getProductDetails(String productId) async {
     try {
-      final response = await _apiService.get('/api/product_info');
-      final List<dynamic> data = response.data as List;
-      return data.map((json) {
-        final Map<String, dynamic> productJson = json as Map<String, dynamic>;
-        return Product(
-          id: productJson['id'] as String,
-          code: productJson['code'] as String,
-          name: productJson['name'] as String,
-          brand: productJson['brand'] as String,
-          material_code: productJson['material_code'] as String,
-          output_brand: productJson['output_brand'] as String?,
-          product_name: productJson['product_name'] as String?,
-          model: productJson['model'] as String?,
-          specification: productJson['specification'] as String?,
-          color: productJson['color'] as String?,
-          length: productJson['length'] as String?,
-          weight: productJson['weight'] as String?,
-          wattage: productJson['wattage'] as String?,
-          pressure: productJson['pressure'] as String?,
-          degree: productJson['degree'] as String?,
-          material: productJson['material'] as String?,
-          price: productJson['price'] != null
-              ? (productJson['price'] as num).toDouble()
-              : null,
-          product_type: productJson['product_type'] as String?,
-          usage_type: productJson['usage_type'] as String?,
-          sub_type: productJson['sub_type'] as String?,
-        );
-      }).toList();
+      final response =
+          await _apiClient.get<Map<String, dynamic>>('/products/$productId');
+      if (response.data?['success'] == true) {
+        final productJson = response.data?['data'];
+        if (productJson != null) {
+          return ProductModel.fromJson(productJson as Map<String, dynamic>);
+        }
+      }
+      throw ServerException(
+        message: response.data?['message'] ?? '获取产品详情失败',
+      );
     } catch (e) {
-      throw Exception('获取所有产品失败: $e');
+      throw ServerException(
+        message: e is DioException ? e.message ?? '网络错误' : e.toString(),
+      );
+    }
+  }
+
+  @override
+  Future<List<ProductModel>> searchProducts({
+    required String query,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      print('搜索产品: query=$query, page=$page, pageSize=$pageSize');
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/products/search',
+        data: {
+          'query': query,
+          'page': page,
+          'pageSize': pageSize,
+        },
+      );
+
+      if (response.data?['success'] == true) {
+        final List<dynamic> productsJson = response.data?['data'] ?? [];
+        print('找到 ${productsJson.length} 个产品');
+        print('产品详情: $productsJson');
+        return productsJson
+            .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))
+            .toList();
+      }
+
+      throw ServerException(
+        message: response.data?['message'] ?? '搜索产品失败',
+      );
+    } catch (e) {
+      print('搜索产品时出错: $e');
+      throw ServerException(
+        message: e is DioException ? e.message ?? '网络错误' : e.toString(),
+      );
     }
   }
 }

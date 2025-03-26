@@ -53,9 +53,9 @@ class ProductDetailsPage extends StatelessWidget {
             _buildInfoSection('品牌', product.brand),
             _buildInfoSection('材质', product.material),
             _buildInfoSection('颜色', product.color),
-            _buildInfoSection('产品类型', product.product_type),
-            _buildInfoSection('用途', product.usage_type),
-            _buildInfoSection('子类型', product.sub_type),
+            _buildInfoSection('产品类型', product.productType),
+            _buildInfoSection('用途', product.usageType),
+            _buildInfoSection('子类型', product.subType),
             const SizedBox(height: 24),
             // 规格参数
             if (product.length != null ||
